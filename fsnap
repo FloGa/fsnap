@@ -1,0 +1,37 @@
+#!/bin/bash
+
+maintdir=/mnt/btrfs/maint
+backupdir="$maintdir/backup"
+
+date=$(date +%Y-%m-%d_%H%M%S)
+
+fatal() {
+    exit 1
+}
+trap fatal INT TERM
+
+if [ ! -d "$backupdir" ]; then
+    mkdir -p $backupdir
+fi
+
+if [ ! -d "$backupdir/ROOT.$date" ]; then
+    sync
+    for vol in ROOT HOME; do
+        # Keep four old snapshots
+        files=$(ls -d "$backupdir/$vol"* | head -n -4)
+        btrfs sub del $files >/dev/null
+
+        declare -i max=5 i=0
+        # Remove output redirection when making a serious script!
+        while ! btrfs sub snap -r "$maintdir/$vol" "$backupdir/$vol.$date" >/dev/null; do
+            ((++i))
+            echo "$vol: Try $i of $max" >&2
+            if [ $i = $max ]; then
+                echo "Giving up." >&2
+                break
+            fi
+            sleep 2
+        done &
+    done
+    wait
+fi

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-maintdir=/mnt/btrfs/maint
-backupdir="$maintdir/backup"
+CONFDIR=/etc/fsnap
 
 date=$(date +%Y-%m-%d_%H%M%S)
 
@@ -10,20 +9,32 @@ fatal() {
 }
 trap fatal INT TERM
 
-if [ ! -d "$backupdir" ]; then
-    mkdir -p $backupdir
-fi
+for conf in $CONFDIR/*.conf; do
+    [ ! -r $conf ] && continue
 
-if [ ! -d "$backupdir/ROOT.$date" ]; then
+    (
+    source $conf
+
+    if [ ! -d "$BACKUPDIR" ]; then
+        mkdir -pv $BACKUPDIR
+    fi
+
     sync
-    for vol in ROOT HOME; do
-        # Keep four old snapshots
-        files=$(ls -d "$backupdir/$vol"* | head -n -4)
-        btrfs sub del $files >/dev/null
+    for vol in "${VOLS[@]}"; do
+        (
+        # Keep $howmuch snapshots. If no howmuch_* config variable defined for
+        # a volume, assume 5.
+
+        eval howmuch=\${howmuch_$vol:-5}
+
+        if [ "$howmuch" -gt 0 ]; then
+            files=$(ls -d "$BACKUPDIR/$vol"* 2>/dev/null | \
+                head -n -$((howmuch - 1)))
+            [ -n "$files" ] && btrfs sub del $files
+        fi
 
         declare -i max=5 i=0
-        # Remove output redirection when making a serious script!
-        while ! btrfs sub snap -r "$maintdir/$vol" "$backupdir/$vol.$date" >/dev/null; do
+        while ! btrfs sub snap -r "$ROOTVOL/$vol" "$BACKUPDIR/$vol.$date"; do
             ((++i))
             echo "$vol: Try $i of $max" >&2
             if [ $i = $max ]; then
@@ -31,7 +42,10 @@ if [ ! -d "$backupdir/ROOT.$date" ]; then
                 break
             fi
             sleep 2
-        done &
+        done
+        ) &
     done
     wait
-fi
+    ) &
+done
+wait

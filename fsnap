@@ -1,6 +1,10 @@
 #!/bin/bash
 
-CONFDIR=/etc/fsnap
+FSNAP_CONFDIR=${FSNAP_CONFDIR:-/etc/fsnap}
+
+if [ ! -d "$FSNAP_CONFDIR" ]; then
+    exit
+fi
 
 date=$(date +%Y-%m-%d_%H%M%S)
 
@@ -9,7 +13,7 @@ fatal() {
 }
 trap fatal INT TERM
 
-for conf in $CONFDIR/*.conf; do
+for conf in $FSNAP_CONFDIR/*.conf; do
     [ ! -r $conf ] && continue
 
     (

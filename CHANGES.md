@@ -1,3 +1,5 @@
+# Changes since latest release
+
 # Changes in 0.3.0
 
 -   Support FSNAP_CONFDIR as environment variable

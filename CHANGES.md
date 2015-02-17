@@ -1,5 +1,9 @@
 # Changes since latest release
 
+-   Support FSNAP_CONFDIR as environment variable
+
+    This way, several different configuration directories can be used.
+
 # Changes in 0.2.0
 
 -   Complete overhaul of initial code

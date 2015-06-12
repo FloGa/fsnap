@@ -1,5 +1,12 @@
 # Changes since latest release
 
+-   Support conditional delete of snapshots
+
+    Through the config variable delete_if, one can set a predicate that must
+    evaluate to true in order to delete the extraneous snapshots. This can
+    become handy if one doesn't want to delete these snapshots while running
+    on battery, because btrfs-cleaner can be quite aggressive.
+
 # Changes in 0.3.0
 
 -   Support FSNAP_CONFDIR as environment variable

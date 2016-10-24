@@ -29,8 +29,9 @@ for conf in $FSNAP_CONFDIR/*.conf; do
         # Replace directory separators (/) with underscores (_). This is used
         # in the howmuch_* variables (see below) since variables must not
         # contain slashes, as well as the snapshot name, to avoid nesting
-        # snapshots.
-        newvol=${vol//\//_}
+        # snapshots. To further avoid bash variable conflicts, replace dots
+        # and dashes with underscores, too.
+        newvol=${vol//[\/.-]/_}
 
         # If a variable $delete_if exists and is set to a predicate, then the
         # extraneous snapshots are deleted only if $delete_if evaluates to

@@ -7,6 +7,11 @@
     become handy if one doesn't want to delete these snapshots while running
     on battery, because btrfs-cleaner can be quite aggressive.
 
+-   Fix bash variable conflicts
+
+    To further avoid bash variable conflicts, replace dots and dashes with
+    underscores in addition to slashes.
+
 # Changes in 0.3.0
 
 -   Support FSNAP_CONFDIR as environment variable

@@ -7,6 +7,15 @@
     become handy if one doesn't want to delete these snapshots while running
     on battery, because btrfs-cleaner can be quite aggressive.
 
+-   Support snapshotting of nested subvolumes
+
+    To allow nested subvolumes to be snapshot, I created a helper variable
+    with the volumes directory separators being replaced with underscores.
+    This variable is used in two places:
+
+    -   howmuch_* variables since they don't allow slashes in their names
+    -   Snapshot target name to avoid nesting snapshots
+
 -   Fix bash variable conflicts
 
     To further avoid bash variable conflicts, replace dots and dashes with

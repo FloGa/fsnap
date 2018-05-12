@@ -26,19 +26,33 @@ for conf in $FSNAP_CONFDIR/*.conf; do
     sync
     for vol in "${VOLS[@]}"; do
         (
-        # Keep $howmuch snapshots. If no howmuch_* config variable defined for
-        # a volume, assume 5.
+        # Replace directory separators (/) with underscores (_). This is used
+        # in the howmuch_* variables (see below) since variables must not
+        # contain slashes, as well as the snapshot name, to avoid nesting
+        # snapshots. To further avoid bash variable conflicts, replace dots
+        # and dashes with underscores, too.
+        newvol=${vol//[\/.-]/_}
 
-        eval howmuch=\${howmuch_$vol:-5}
+        # If a variable $delete_if exists and is set to a predicate, then the
+        # extraneous snapshots are deleted only if $delete_if evaluates to
+        # true. An empty variable lets eval always be true.
 
-        if [ "$howmuch" -gt 0 ]; then
-            files=$(ls -d "$BACKUPDIR/$vol"* 2>/dev/null | \
-                head -n -$((howmuch - 1)))
-            [ -n "$files" ] && btrfs sub del $files
+        if eval $delete_if; then
+            # Keep $howmuch snapshots. If no howmuch_* config variable defined
+            # for a volume, assume 5.
+
+            eval howmuch=\${howmuch_$newvol:-5}
+
+            if [ "$howmuch" -gt 0 ]; then
+                files=$(ls -d "$BACKUPDIR/$newvol".* 2>/dev/null | \
+                    head -n -$((howmuch - 1)))
+                [ -n "$files" ] && btrfs sub del $files
+            fi
         fi
 
         declare -i max=5 i=0
-        while ! btrfs sub snap -r "$ROOTVOL/$vol" "$BACKUPDIR/$vol.$date"; do
+        while ! btrfs sub snap -r "$ROOTVOL/$vol" "$BACKUPDIR/$newvol.$date"
+        do
             ((++i))
             echo "$vol: Try $i of $max" >&2
             if [ $i = $max ]; then
